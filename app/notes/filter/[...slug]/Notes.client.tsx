@@ -3,23 +3,19 @@
 import { useState } from "react";
 import {
   useQuery,
-  useQueryClient,
-  useMutation,
   UseQueryResult,
   keepPreviousData,
 } from "@tanstack/react-query";
-import { fetchNotes, createNote, NotesHttpResponse } from "@/lib/api";
-import type { FormValues, Note } from "@/types/note";
+import { fetchNotes, NotesHttpResponse } from "@/lib/api";
+import type { Note } from "@/types/note";
 import { useDebounce } from "@/hooks/useDebouncedValue";
 import SearchBox from "@/components/SearchBox/SearchBox";
 import Pagination from "@/components/Pagination/Pagination";
 import NoteList from "@/components/NoteList/NoteList";
-import Modal from "@/components/Modal/Modal";
-import NoteForm from "@/components/NoteForm/NoteForm";
 import Loader from "@/components/Loader/Loader";
 import { ErrorMessageEmpty } from "@/components/ErrorMessageEmpty/ErrorMessageEmpty";
 import ToastContainer from "@/components/ToastContainer/ToastContainer";
-import toast from "react-hot-toast";
+import Link from "next/link";
 import css from "./NotesPage.module.css";
 
 interface NotesClientProps {
@@ -36,9 +32,6 @@ export default function NotesClient({
   const [search, setSearch] = useState("");
   const debouncedSearch = useDebounce(search, 500);
   const [page, setPage] = useState(1);
-  const [isModalOpen, setIsModalOpen] = useState(false);
-
-  const queryClient = useQueryClient();
 
   const {
     data,
@@ -53,17 +46,6 @@ export default function NotesClient({
       totalPages: initialTotalPages,
     },
     placeholderData: keepPreviousData,
-  });
-
-  const createNoteMutation = useMutation({
-    mutationFn: (noteData: FormValues) => createNote(noteData),
-    onSuccess: () => {
-      toast.success("Note created successfully");
-      setPage(1);
-      queryClient.invalidateQueries({ queryKey: ["notes"] });
-      setIsModalOpen(false);
-    },
-    onError: () => toast.error("Error creating note"),
   });
 
   const notes = data?.notes || [];
@@ -90,9 +72,9 @@ export default function NotesClient({
             onPageChange={({ selected }) => setPage(selected + 1)}
           />
         )}
-        <button className={css.button} onClick={() => setIsModalOpen(true)}>
+        <Link href="/notes/action/create" className={css.button}>
           Create note +
-        </button>
+        </Link>
       </header>
 
       {isLoading && <Loader />}
@@ -105,16 +87,6 @@ export default function NotesClient({
             <ErrorMessageEmpty />
           )}
         </>
-      )}
-
-      {isModalOpen && (
-        <Modal onClose={() => setIsModalOpen(false)}>
-          {createNoteMutation.isPending ? (
-            <Loader />
-          ) : (
-            <NoteForm onClose={() => setIsModalOpen(false)} />
-          )}
-        </Modal>
       )}
     </div>
   );
