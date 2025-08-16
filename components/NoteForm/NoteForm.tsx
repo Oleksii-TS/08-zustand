@@ -1,6 +1,5 @@
 "use client";
 
-import { useState, FormEvent } from "react";
 import { useRouter } from "next/navigation";
 import { useMutation, useQueryClient } from "@tanstack/react-query";
 import { createNote } from "@/lib/api";
@@ -13,10 +12,8 @@ export default function NoteForm() {
   const queryClient = useQueryClient();
   const { draft, setDraft, clearDraft } = useNoteStore();
 
-  const [form, setForm] = useState(draft);
-
   const mutation = useMutation({
-    mutationFn: () => createNote(form),
+    mutationFn: () => createNote(draft),
     onSuccess: () => {
       toast.success("Note created successfully");
       queryClient.invalidateQueries({ queryKey: ["notes"] });
@@ -32,11 +29,10 @@ export default function NoteForm() {
     >
   ) => {
     const { name, value } = e.target;
-    setForm((prev) => ({ ...prev, [name]: value }));
-    setDraft({ [name]: value });
+    setDraft({ ...draft, [name]: value });
   };
 
-  const handleSubmit = (e: FormEvent) => {
+  const handleSubmit = (e: React.FormEvent<HTMLFormElement>) => {
     e.preventDefault();
     mutation.mutate();
   };
@@ -50,7 +46,7 @@ export default function NoteForm() {
           name="title"
           type="text"
           className={css.input}
-          value={form.title}
+          value={draft.title}
           onChange={handleChange}
         />
       </div>
@@ -62,7 +58,7 @@ export default function NoteForm() {
           name="content"
           rows={8}
           className={css.textarea}
-          value={form.content}
+          value={draft.content}
           onChange={handleChange}
         />
       </div>
@@ -73,7 +69,7 @@ export default function NoteForm() {
           id="tag"
           name="tag"
           className={css.select}
-          value={form.tag}
+          value={draft.tag}
           onChange={handleChange}
         >
           <option value="Todo">Todo</option>
